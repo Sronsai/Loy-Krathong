@@ -330,3 +330,6 @@ body.tv #demoBanner { top: 300px; }
 .tv-slip { margin: 10px 0 0 !important; font-size: .95em !important; color: #fff !important; line-height: 1.45; }
 .tv-slip b { color: var(--gold-2); }
 .tv-or { margin-top: 6px !important; font-size: .78em !important; color: var(--muted) !important; }
+
+/* TV: ย้าย QR ไปมุมบนซ้าย (ท้องฟ้าว่าง ไม่บังกระทงบนน้ำ และไม่โดนคอมเมนต์ Facebook บนมือถือบัง) */
+body.tv #tvQr { top: 16px; bottom: auto; left: 16px; }
