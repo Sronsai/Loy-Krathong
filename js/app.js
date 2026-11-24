@@ -216,6 +216,7 @@
   }
   const TIER_RANGE = () => ({ S: [C.MIN_AMOUNT, C.TIER_MEDIUM - 1], M: [C.TIER_MEDIUM, C.TIER_LARGE - 1], L: [C.TIER_LARGE, null] });
   function buildTierCards() {
+    if (!$('tierCards')) return;
     const r = TIER_RANGE();
     $('tierCards').innerHTML = ['S', 'M', 'L'].map((t) => `
       <button type="button" class="tcard t${t}" data-t="${t}">
@@ -225,7 +226,7 @@
         ${t === 'L' ? '<em>+ พลุ 🎆</em>' : t === 'M' ? '<em>+ พลุ</em>' : ''}
       </button>`).join('');
   }
-  $('tierCards').addEventListener('click', (e) => {
+  $('tierCards') && $('tierCards').addEventListener('click', (e) => {
     const b = e.target.closest('.tcard'); if (!b) return;
     const t = b.dataset.t, r = TIER_RANGE()[t], cur = Number($('fAmount').value);
     if (tierOf(cur) !== t || !cur) $('fAmount').value = r[0];
@@ -433,7 +434,7 @@
 
   /* ---------------- บัญชีรับบริจาค (กลางจอไลฟ์) ---------------- */
   function renderBankCard() {
-    if (!TV) return;
+    if (!TV || !$('bankCard')) return;
     const no = String(C.ACCOUNT_NO || '').trim();
     $('bankCard').hidden = !no;
     if (!no) return;

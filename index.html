@@ -129,8 +129,9 @@
 
   <!-- ===================== TV / LIVE QR ===================== -->
   <aside id="tvQr" class="panel" hidden>
-    <h2>📱 สแกนร่วมบุญลอยกระทง</h2>
+    <h2>📝 สแกนลงชื่อทำบุญซื้อกระทง</h2>
     <div id="tvQrCode"></div>
+    <p class="tv-slip">📎 กรุณาเตรียม<b>สลิปโอนเงินทำบุญ</b><br>เพื่อใช้แนบในแบบฟอร์ม</p>
     <p class="tv-or">หรือกด <b>ลิงก์ที่ปักหมุด 📌</b> ในคอมเมนต์</p>
     <p id="tvQrUrl"></p>
   </aside>
@@ -141,6 +142,13 @@
     <span id="livePage"></span>
     <span class="clock" id="liveClock">--:--</span>
     <span class="countdown" id="liveCountdown" hidden></span>
+  </div>
+
+  <!-- บัญชีรับบริจาค (โหมด ?tv=1) -->
+  <div id="bankCard" hidden>
+    <div class="bk-label">โอนทำบุญ เข้าบัญชีโรงพยาบาลปากชม</div>
+    <div class="bk-row"><span class="bk-bank" id="bkBank"></span><span class="bk-no" id="bkNo"></span></div>
+    <div class="bk-name" id="bkName"></div>
   </div>
 
   <!-- แถบข้อความวิ่ง (โหมด ?tv=1) -->
