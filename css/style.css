@@ -314,3 +314,19 @@ body.tv #demoBanner { top: 168px; }
   #app::after { height: 84px; }
 }
 .pay-tip b { color: #123a64; }
+
+/* ---------------- บัญชีรับบริจาค กลางจอไลฟ์ ---------------- */
+#bankCard { position: fixed; left: 50%; top: 170px; transform: translateX(-50%); z-index: 19; text-align: center;
+  padding: 12px 34px 14px; border-radius: 20px; background: linear-gradient(180deg, rgba(255, 252, 244, .97), rgba(255, 240, 214, .95));
+  border: 3px solid var(--gold); box-shadow: 0 0 40px rgba(255, 180, 70, .55), 0 12px 30px rgba(0, 0, 0, .45); color: #3a1d00;
+  animation: bkGlow 3s ease-in-out infinite; }
+#bankCard .bk-label { font-size: 1.05em; font-weight: 500; color: #8a4b00; }
+#bankCard .bk-row { display: flex; align-items: baseline; justify-content: center; gap: 16px; margin-top: 2px; }
+#bankCard .bk-bank { font-size: 1.5em; font-weight: 600; color: #d4147f; white-space: nowrap; }
+#bankCard .bk-no { font-size: 3.1em; font-weight: 600; letter-spacing: 3px; color: #1c1c1c; font-variant-numeric: tabular-nums; line-height: 1.1; }
+#bankCard .bk-name { font-size: .95em; color: #6b4a1f; }
+@keyframes bkGlow { 50% { box-shadow: 0 0 60px rgba(255, 190, 80, .8), 0 12px 30px rgba(0, 0, 0, .45); } }
+body.tv #demoBanner { top: 300px; }
+.tv-slip { margin: 10px 0 0 !important; font-size: .95em !important; color: #fff !important; line-height: 1.45; }
+.tv-slip b { color: var(--gold-2); }
+.tv-or { margin-top: 6px !important; font-size: .78em !important; color: var(--muted) !important; }

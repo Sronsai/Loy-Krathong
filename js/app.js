@@ -156,7 +156,7 @@
     const num = ['MIN_AMOUNT', 'TIER_MEDIUM', 'TIER_LARGE', 'GOAL_AMOUNT'];
     Object.keys(cfg || {}).forEach((k) => { C[k] = num.includes(k) ? Number(cfg[k]) : cfg[k]; });
     $('eventTitle').textContent = C.EVENT_TITLE;
-    buildTierCards(); renderPay(); renderTier(); renderStats();
+    buildTierCards(); renderPay(); renderTier(); renderStats(); renderBankCard();
     if (C.DONATION_OPEN === false || C.DONATION_OPEN === 'FALSE') {
       $('submitBtn').disabled = true; $('submitBtn').textContent = 'ปิดรับบริจาคแล้ว ขอบคุณค่ะ';
     }
@@ -375,7 +375,11 @@
       if (ingest(d, { animate: true })) { state.total += d.amount; state.count++; renderStats(); listDirty = true; }
       showThanks(d);
     } catch (ex) {
-      err('❌ ' + (ex.message || 'เกิดข้อผิดพลาด กรุณาลองใหม่'));
+      const net = ex instanceof TypeError || /load failed|failed to fetch|networkerror|json/i.test(String(ex.message));
+      err(net
+        ? '❌ เชื่อมต่อระบบบันทึกข้อมูลไม่สำเร็จ กรุณาลองใหม่อีกครั้ง หากยังไม่ได้ กรุณาแจ้งเจ้าหน้าที่ (ข้อมูลยังไม่ถูกบันทึก)'
+        : '❌ ' + (ex.message || 'เกิดข้อผิดพลาด กรุณาลองใหม่'));
+      console.error('submit failed', ex);
     } finally {
       btn.disabled = false; renderTier();
     }
@@ -424,6 +428,19 @@
     else document.addEventListener('click', () => { if (!sound) { sound = true; Scene.setSound(true); } }, { once: true });
     startLiveBar();
     startTicker();
+    renderBankCard();
+  }
+
+  /* ---------------- บัญชีรับบริจาค (กลางจอไลฟ์) ---------------- */
+  function renderBankCard() {
+    if (!TV) return;
+    const no = String(C.ACCOUNT_NO || '').trim();
+    $('bankCard').hidden = !no;
+    if (!no) return;
+    $('bkBank').textContent = C.BANK_NAME || '';
+    $('bkNo').textContent = no;
+    $('bkName').textContent = C.ACCOUNT_NAME ? 'ชื่อบัญชี ' + C.ACCOUNT_NAME : '';
+    $('bkName').hidden = !C.ACCOUNT_NAME;
   }
 
   /* ---------------- Facebook Live: แถบ LIVE + นาฬิกา + นับถอยหลัง ---------------- */
