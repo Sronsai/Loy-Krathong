@@ -38,10 +38,43 @@
   /* ------------------------------------------------------------------ */
   /*  API                                                                */
   /* ------------------------------------------------------------------ */
+  // ดึงข้อมูล: ลอง fetch ก่อน ถ้าไม่ได้ (เช่นใน OBS Browser Source) สลับไปใช้ JSONP อัตโนมัติ
+  let useJsonp = qs.has('jsonp');
+  function jsonp(params) {
+    return new Promise((resolve, reject) => {
+      const cb = '__lk' + Date.now().toString(36) + Math.floor(Math.random() * 1e6);
+      const s = document.createElement('script');
+      const done = () => { delete window[cb]; s.remove(); clearTimeout(t); };
+      const t = setTimeout(() => { done(); reject(new Error('jsonp timeout')); }, 20000);
+      window[cb] = (data) => { done(); resolve(data); };
+      s.onerror = () => { done(); reject(new Error('jsonp load error')); };
+      s.src = API + (API.includes('?') ? '&' : '?') + new URLSearchParams(Object.assign({}, params, { callback: cb, _: Date.now() }));
+      document.head.appendChild(s);
+    });
+  }
+  function apiStatus(msg) {
+    if (!qs.has('debug')) return;
+    let el = document.getElementById('apiDebug');
+    if (!el) { el = document.createElement('div'); el.id = 'apiDebug'; el.style.cssText = 'position:fixed;left:8px;top:8px;z-index:99;background:#000c;color:#0f0;font:12px monospace;padding:4px 8px;border-radius:6px;max-width:60vw'; document.body.appendChild(el); }
+    el.textContent = new Date().toLocaleTimeString('th-TH') + ' ' + msg;
+  }
   async function apiGet(params) {
-    const url = API + (API.includes('?') ? '&' : '?') + new URLSearchParams(params);
-    const r = await fetch(url, { method: 'GET', redirect: 'follow', cache: 'no-store' });
-    return r.json();
+    if (!useJsonp) {
+      try {
+        const url = API + (API.includes('?') ? '&' : '?') + new URLSearchParams(params);
+        const r = await fetch(url, { method: 'GET', redirect: 'follow', cache: 'no-store' });
+        const j = await r.json();
+        apiStatus('fetch ok ' + (params.action || ''));
+        return j;
+      } catch (e) {
+        console.warn('fetch failed → JSONP', e);
+        apiStatus('fetch failed: ' + e.message + ' → JSONP');
+        useJsonp = true;
+      }
+    }
+    const j = await jsonp(params);
+    apiStatus('jsonp ok ' + (params.action || ''));
+    return j;
   }
   async function apiPost(body) {
     // text/plain → ไม่เกิด CORS preflight กับ Apps Script
@@ -136,7 +169,7 @@
         state.total = res.total; state.count = res.count;
         renderStats(); listDirty = true;
       }
-    } catch (e) { console.warn('list', e); }
+    } catch (e) { console.warn('list', e); apiStatus('ERROR list: ' + e.message); }
     setTimeout(poll, C.POLL_MS);
   }
   async function poll() {
