@@ -507,7 +507,8 @@
   /* ------------------------------------------------------------------ */
   /*  Props: krathong table + hospital sign                              */
   /* ------------------------------------------------------------------ */
-  const TABLE = { x: 2284, y: 806, w: 150 };   // โต๊ะรับกระทง (บนทางเดินด้านบนบันได)
+  const TABLE = { x: 2470, y: 1168, s: 1.55 };   // โต๊ะรับกระทง (ทางเดินขวาล่าง ไม่โดนแถบรายชื่อบัง)
+  const SIGN = { x: 1730, y: 945, s: 0.72 };     // ป้าย รพ. (ตลิ่งหญ้าข้างหัวบันได)
   function buildProps(cfg) {
     const props = document.getElementById('props');
     const miniK = (x, y, s, c) => `
@@ -519,7 +520,7 @@
         <rect x="-3" y="-20" width="2.2" height="12" fill="#fff6d8"/><circle class="flick" cx="-1.9" cy="-22.5" r="2.4" fill="#ffd25a"/>
       </g>`;
     props.innerHTML = `
-      <svg class="prop" id="table" style="left:${TABLE.x - 90}px;top:${TABLE.y - 120}px;z-index:${TABLE.y}" width="180" height="128" viewBox="0 0 180 128">
+      <svg class="prop" id="table" style="left:${TABLE.x - 90 * TABLE.s}px;top:${TABLE.y - 122 * TABLE.s}px;z-index:${TABLE.y}" width="${180 * TABLE.s}" height="${128 * TABLE.s}" viewBox="0 0 180 128">
         <defs><linearGradient id="cloth" x1="0" x2="0" y1="0" y2="1"><stop offset="0" stop-color="#fff4d6"/><stop offset="1" stop-color="#e9c98a"/></linearGradient></defs>
         <ellipse cx="90" cy="122" rx="80" ry="7" fill="rgba(0,0,0,.35)"/>
         <rect x="22" y="66" width="7" height="56" fill="#6b3f1d"/><rect x="151" y="66" width="7" height="56" fill="#6b3f1d"/>
@@ -530,7 +531,7 @@
         <rect x="58" y="94" width="64" height="20" rx="5" fill="#5b2a0a"/>
         <text x="90" y="108" text-anchor="middle" font-family="Mitr" font-size="11" fill="#ffe39b">จุดรับกระทง</text>
       </svg>
-      <svg class="prop" id="sign" style="left:2268px;top:905px;z-index:1180" width="300" height="300" viewBox="0 0 300 300">
+      <svg class="prop" id="sign" style="left:${SIGN.x - 150 * SIGN.s}px;top:${SIGN.y - 298 * SIGN.s}px;z-index:${SIGN.y}" width="${300 * SIGN.s}" height="${300 * SIGN.s}" viewBox="0 0 300 300">
         <defs>
           <linearGradient id="wood" x1="0" x2="0" y1="0" y2="1"><stop offset="0" stop-color="#7a4520"/><stop offset="1" stop-color="#4a2610"/></linearGradient>
           <linearGradient id="goldf" x1="0" x2="1"><stop offset="0" stop-color="#b8781a"/><stop offset=".5" stop-color="#ffe08a"/><stop offset="1" stop-color="#b8781a"/></linearGradient>

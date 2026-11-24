@@ -356,3 +356,6 @@ body.tv #tvQr { top: 16px; bottom: auto; left: 16px; }
 @media (max-aspect-ratio: 1/1), (max-width: 760px) { .bank-no { font-size: 2.1em; } }
 .bank-tip { margin-top: 8px; font-size: .85em; color: #5a6680; }
 .bank-tip .warn { color: #b26a00; }
+
+/* TV: ย่อแถบรายชื่อผู้ร่วมบุญ ไม่ให้บังตัวการ์ตูนตอนเดินจากโต๊ะไปหัวบันได */
+body.tv #donorPanel { height: 48vh; }
