@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>ลอยกระทงออนไลน์ ริมโขง | โรงพยาบาลปากชม จ.เลย</title>
+<meta name="description" content="ร่วมบุญซื้อกระทงออนไลน์ สมทบทุนโรงพยาบาลปากชม จังหวัดเลย ลอยกระทงริมแม่น้ำโขงแบบเรียลไทม์">
+<meta property="og:title" content="ลอยกระทงออนไลน์ ริมโขง — โรงพยาบาลปากชม">
+<meta property="og:description" content="ร่วมบุญซื้อกระทง สมทบทุนโรงพยาบาลปากชม แล้วดูกระทงของคุณลอยบนแม่น้ำโขงแบบเรียลไทม์">
+<meta property="og:image" content="assets/background-sm.jpg">
+<meta name="theme-color" content="#0b1530">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🪷</text></svg>">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Charm:wght@700&family=Mitr:wght@300;400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<div id="app">
+  <!-- ===================== SCENE ===================== -->
+  <div id="stage-wrap">
+    <div id="stage">
+      <img id="bg" src="assets/background.jpg" alt="ริมแม่น้ำโขง คืนลอยกระทง" draggable="false">
+      <canvas id="fx"></canvas>
+      <div id="props"></div>   <!-- โต๊ะรับกระทง + ป้าย รพ. -->
+      <div id="walkers"></div> <!-- ตัวการ์ตูน -->
+    </div>
+  </div>
+
+  <!-- ===================== HEADER / STATS ===================== -->
+  <header id="topbar">
+    <div class="title">
+      <span class="lotus">🪷</span>
+      <div>
+        <h1 id="eventTitle">ลอยกระทงออนไลน์ ริมโขง</h1>
+        <p id="eventSub">ร่วมบุญซื้อกระทง สมทบทุน <b>โรงพยาบาลปากชม</b> จ.เลย</p>
+      </div>
+    </div>
+    <div class="stats">
+      <div class="stat"><small>ยอดร่วมบุญ</small><b id="statTotal">0</b><small>บาท</small></div>
+      <div class="stat"><small>กระทง</small><b id="statCount">0</b><small>ใบ</small></div>
+      <div class="goal" title="เป้าหมาย">
+        <div class="goal-bar"><i id="goalFill"></i></div>
+        <small id="goalText">เป้าหมาย 100,000 บาท</small>
+      </div>
+    </div>
+  </header>
+
+  <!-- ===================== DONATION FORM ===================== -->
+  <aside id="formPanel" class="panel">
+    <div class="panel-head">
+      <h2>🪷 ร่วมบุญซื้อกระทง</h2>
+      <button class="icon-btn" id="formToggle" aria-label="ย่อ/ขยายฟอร์ม">–</button>
+    </div>
+    <form id="donateForm" novalidate autocomplete="on">
+      <label class="field">
+        <span>ชื่อ-สกุล <em>*</em></span>
+        <input name="name" id="fName" maxlength="80" placeholder="เช่น สมชาย ใจบุญ" required autocomplete="name">
+      </label>
+
+      <div class="field">
+        <span>เพศ <em>*</em> <small>(ตัวการ์ตูนที่จะเดินไปลอยกระทง)</small></span>
+        <div class="seg" id="genderSeg">
+          <button type="button" data-v="male"><i class="ava ava-m"></i>ชาย</button>
+          <button type="button" data-v="female"><i class="ava ava-f"></i>หญิง</button>
+        </div>
+      </div>
+
+      <div class="field">
+        <span>จำนวนเงินซื้อกระทง (บาท) <em>*</em></span>
+        <div class="chips" id="amountChips"></div>
+        <div class="amount-row">
+          <input name="amount" id="fAmount" type="number" inputmode="decimal" min="1" step="1" placeholder="ระบุจำนวนเงิน">
+          <span class="tier" id="tierBadge">ขนาดกระทง</span>
+        </div>
+        <small class="hint" id="tierHint"></small>
+      </div>
+
+      <div class="pay" id="payBox"></div>
+
+      <div class="field">
+        <span>แนบสลิปโอนเงิน <em>*</em></span>
+        <label class="drop" id="slipDrop">
+          <input type="file" id="fSlip" accept="image/*,application/pdf">
+          <span class="drop-text" id="slipText">📎 แตะเพื่อเลือกรูปสลิป (JPG/PNG/PDF)</span>
+          <img id="slipPreview" alt="">
+        </label>
+      </div>
+
+      <details class="more">
+        <summary>ข้อมูลเพิ่มเติม (ไม่บังคับ)</summary>
+        <label class="field"><span>คำอธิษฐาน / ข้อความถึง รพ. <small>(จะแสดงบนจอไลฟ์)</small></span>
+          <input name="wish" id="fWish" maxlength="120" placeholder="ขอให้ทุกคนสุขภาพแข็งแรง"></label>
+        <label class="field"><span>เบอร์โทร (สำหรับติดต่อกลับ/ใบอนุโมทนาบัตร)</span>
+          <input name="phone" id="fPhone" inputmode="tel" maxlength="20" autocomplete="tel"></label>
+        <label class="check"><input type="checkbox" id="fReceipt"> ต้องการใบอนุโมทนาบัตร</label>
+        <label class="check"><input type="checkbox" id="fAnon"> ไม่ประสงค์ออกนาม (แสดงเป็น “ผู้ใจบุญ”)</label>
+      </details>
+
+      <label class="check consent"><input type="checkbox" id="fConsent" checked>
+        ยินยอมให้แสดงชื่อบนหน้าจอ และให้ รพ. เก็บข้อมูลเพื่อตรวจสอบการบริจาค</label>
+      <input type="text" name="website" id="fWebsite" class="hp" tabindex="-1" autocomplete="off">
+
+      <div class="err" id="formErr" role="alert"></div>
+      <button type="submit" class="btn-main" id="submitBtn">ลอยกระทง 🙏</button>
+    </form>
+    <div class="thanks" id="thanks" hidden>
+      <div class="big">🙏</div>
+      <h3>อนุโมทนาบุญ</h3>
+      <p id="thanksText">กระทงของคุณกำลังถูกนำไปลอย…</p>
+      <button type="button" class="btn-ghost" id="againBtn">ร่วมบุญอีกครั้ง</button>
+    </div>
+  </aside>
+
+  <!-- ===================== DONOR LIST ===================== -->
+  <aside id="donorPanel" class="panel">
+    <div class="panel-head"><h2>✨ ผู้ร่วมบุญ</h2><span class="live"><i></i>LIVE</span></div>
+    <div id="latest"></div>
+    <div id="donorScroll"><ul id="donorList"></ul></div>
+  </aside>
+
+  <!-- ===================== TV / LIVE QR ===================== -->
+  <aside id="tvQr" class="panel" hidden>
+    <h2>📱 สแกนร่วมบุญลอยกระทง</h2>
+    <div id="tvQrCode"></div>
+    <p class="tv-or">หรือกด <b>ลิงก์ที่ปักหมุด 📌</b> ในคอมเมนต์</p>
+    <p id="tvQrUrl"></p>
+  </aside>
+
+  <!-- แถบสถานะไลฟ์ (โหมด ?tv=1) -->
+  <div id="liveBar" hidden>
+    <span class="onair"><i></i>LIVE</span>
+    <span id="livePage"></span>
+    <span class="clock" id="liveClock">--:--</span>
+    <span class="countdown" id="liveCountdown" hidden></span>
+  </div>
+
+  <!-- แถบข้อความวิ่ง (โหมด ?tv=1) -->
+  <div id="ticker" hidden><div id="tickerTrack"></div></div>
+
+  <div id="toasts"></div>
+  <div id="demoBanner" hidden>โหมดทดลอง — ยังไม่ได้เชื่อม Google Sheet (รายชื่อเป็นตัวอย่าง ไม่บันทึกข้อมูลจริง)</div>
+
+  <nav id="controls">
+    <button class="icon-btn" id="btnSound" title="เปิด/ปิดเสียง">🔇</button>
+    <button class="icon-btn" id="btnFull" title="เต็มจอ">⛶</button>
+    <button class="mobile-cta" id="btnDonateMobile">🪷 ร่วมบุญลอยกระทง</button>
+  </nav>
+</div>
+
+<script src="lib/qrcode.js"></script>
+<script src="js/config.js"></script>
+<script src="js/promptpay.js"></script>
+<script src="js/scene.js"></script>
+<script src="js/walkers.js"></script>
+<script src="js/app.js"></script>
+</body>
+</html>
