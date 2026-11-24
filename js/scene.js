@@ -226,6 +226,41 @@
     return { th: Math.atan2(dy, dx), r: Math.hypot(dx, dy) };
   }
 
+  /* ---- โซนใกล้แพ: กระทงล่าสุดลอยวนอยู่บริเวณนี้พร้อมป้ายชื่อ ไม่หายไปไหน ---- */
+  const NEAR = { x0: 40, x1: 1240, y0: 965, y1: 1290 };
+  function nearAnchor(around) {
+    for (let i = 0; i < 60; i++) {
+      let x, y;
+      if (around && i < 40) {      // ครั้งแรกให้อยู่ไม่ไกลจากจุดที่ปล่อย
+        x = around.x + rnd(-260, 200); y = around.y + rnd(-130, 120);
+      } else { x = rnd(NEAR.x0, NEAR.x1); y = rnd(NEAR.y0, NEAR.y1); }
+      if (y < NEAR.y0 || y > NEAR.y1) continue;
+      // เผื่อระยะจากตลิ่ง/แพ (ตรวจวงรอบรอบจุด)
+      if (inWater(x, y) && inWater(x - 45, y) && inWater(x + 45, y) && inWater(x, y - 18) && inWater(x, y + 18)) return { x, y };
+    }
+    return { x: RELEASE_POINT.x - 120, y: RELEASE_POINT.y };
+  }
+  function nearPos(k, t) {
+    // วงเล็กๆ รอบจุดยึด + จุดยึดเลื่อนช้าๆ = ลอยวนไปมาเป็นธรรมชาติ
+    const ax = k.ax + Math.sin(t * 0.031 + k.ph1) * 55 + Math.sin(t * 0.017 + k.ph2) * 35;
+    const ay = k.ay + Math.sin(t * 0.023 + k.ph2) * 22;
+    const a = t * k.omegaN + k.ph1;
+    return { x: ax + Math.cos(a) * k.rr, y: ay + Math.sin(a) * k.rr * 0.32 };
+  }
+  function rebalance() {
+    // กระทงล่าสุด NEAR_MAX ใบอยู่โซนใกล้แพ ใบที่เก่ากว่าค่อยๆ ไหลออกไปไกล (ยังอยู่บนน้ำ ไม่หาย)
+    const nearMax = (window.LK_CONFIG && LK_CONFIG.NEAR_MAX) || 45;
+    const alive = krathongs.filter(q => !q.dying).sort((a, b) => b.ts - a.ts);
+    alive.forEach((k, i) => {
+      const want = i < nearMax ? 'near' : 'far';
+      if (k.mode !== want) {
+        k.mode = want;
+        if (want === 'far') { const p = polarOf(k.x, k.y); k.th = p.th; k.r = p.r; }
+        else { const a = nearAnchor(); k.ax = a.x; k.ay = a.y; }
+      }
+    });
+  }
+
   function addKrathong(d, opts = {}) {
     const h = hash(d.id || String(hashSeed++));
     const tier = d.size || 'S';
@@ -237,13 +272,17 @@
       omega: (2 * Math.PI / 340) * (0.7 + ((h >> 7) % 100) / 160),
       ph1: (h % 628) / 100, ph2: ((h >> 5) % 628) / 100,
       x: 0, y: 0, born: performance.now(), fresh: !!opts.fresh, alpha: opts.fresh ? 1 : 0, dying: false,
+      ts: d.ts || Date.now(), mode: 'near', ax: 0, ay: 0,
+      rr: 22 + ((h >> 9) % 100) / 100 * 45, omegaN: (2 * Math.PI / (28 + ((h >> 11) % 100) / 100 * 30)) * (h & 1 ? 1 : -1),
     };
     if (opts.at) {
       const p = polarOf(opts.at.x, opts.at.y);
       k.th = p.th; k.r = p.r;
       k.x = opts.at.x; k.y = opts.at.y;
       k.alpha = 1;
+      const a = nearAnchor(opts.at); k.ax = a.x; k.ay = a.y;
     } else {
+      const a = nearAnchor(); k.ax = a.x; k.ay = a.y;
       // กระจายบนวงน้ำวน ณ ตำแหน่งสุ่ม (รายการเก่าตอนเปิดหน้า)
       for (let tries = 0; tries < 30; tries++) {
         k.th = Math.random() * Math.PI * 2; k.r = k.rTarget;
@@ -252,7 +291,10 @@
       }
     }
     krathongs.push(k);
-    const max = (window.LK_CONFIG && LK_CONFIG.MAX_KRATHONG_ON_WATER) || 260;
+    if (!opts.at) { const p0 = nearPos(k, 0); k.x = p0.x; k.y = p0.y; }
+    rebalance();
+    if (!opts.at && k.mode === 'far') { const g = gyrePos(k, 0); k.x = g.x; k.y = g.y; }
+    const max = (window.LK_CONFIG && LK_CONFIG.MAX_KRATHONG_ON_WATER) || 400;
     const alive = krathongs.filter(q => !q.dying);
     if (alive.length > max) alive.slice(0, alive.length - max).forEach(q => q.dying = true);
     return k;
@@ -266,7 +308,15 @@
 
   function updateKrathongs(dt, t) {
     for (const k of krathongs) {
-      // ค่อยๆ เคลื่อนเข้าสู่วงโคจรของตัวเอง แล้วไหลวนไปเรื่อยๆ
+      if (k.mode === 'near') {
+        let p = nearPos(k, t);
+        if (!inWater(p.x, p.y)) { const a = nearAnchor({ x: k.x, y: k.y }); k.ax = a.x; k.ay = a.y; p = { x: k.x, y: k.y }; }
+        const f = Math.min(1, dt * 0.35);   // ไหลช้าๆ นุ่มนวล
+        k.x += (p.x - k.x) * f; k.y += (p.y - k.y) * f;
+        if (k.dying) k.alpha -= dt * 0.25; else if (k.alpha < 1) k.alpha = Math.min(1, k.alpha + dt * 0.5);
+        continue;
+      }
+      // กระทงเก่า: ไหลวนในวงน้ำวนกลางแม่น้ำ
       k.r += (k.rTarget - k.r) * Math.min(1, dt * 0.05);
       k.th += k.omega * dt * (0.55 + 0.45 * persp(k.y));
       let p = gyrePos(k, t);
@@ -277,7 +327,7 @@
         p = { x: k.x + (GYRE.cx - k.x) * 0.01, y: k.y + (GYRE.cy - k.y) * 0.01 };
       }
       // smooth follow
-      const f = Math.min(1, dt * 1.6);
+      const f = Math.min(1, dt * 0.5);
       k.x += (p.x - k.x) * f; k.y += (p.y - k.y) * f;
       if (k.dying) k.alpha -= dt * 0.25; else if (k.alpha < 1) k.alpha = Math.min(1, k.alpha + dt * 0.5);
     }
@@ -321,20 +371,24 @@
     const cands = [];
     for (const k of list) {
       const p = persp(k.y), fresh = k.fresh && now - k.born < 180000;
-      if (!fresh && p < 0.42) continue;
-      cands.push({ k, p, pri: (fresh ? 10 : 0) + p });
+      if (!fresh && k.mode !== 'near' && p < 0.42) continue;
+      cands.push({ k, p, pri: (fresh ? 20 : 0) + (k.mode === 'near' ? 10 : 0) + p });
     }
     cands.sort((a, b) => b.pri - a.pri);
     const placed = [];
     for (const { k, p } of cands) {
-      if (placed.length >= 34) break;
+      if (placed.length >= 70) break;
       const w = TIER_W[k.tier] * p;
-      const ts = Math.max(0.5, p) * 0.62;
+      const ts = Math.max(0.55, p) * 0.78;   // ขนาดป้ายชื่อ (ปรับให้ใหญ่ขึ้นเล็กน้อย)
       const tw = k.tag.w * ts, th = k.tag.h * ts;
-      const x = k.x - tw / 2 + w * 0.12, y = k.y - w * 0.62 - th;
-      const box = [x, y, x + tw, y + th * 0.55];
-      if (placed.some(b => box[0] < b[2] && box[2] > b[0] && box[1] < b[3] && box[3] > b[1])) continue;
-      placed.push(box);
+      const x = k.x - tw / 2 + w * 0.12;
+      let y = k.y - w * 0.62 - th, ok = false;
+      for (let tryN = 0; tryN < 3 && !ok; tryN++) {        // ชนกัน → ยกป้ายขึ้นทีละขั้น
+        const box = [x, y, x + tw, y + th * 0.55];
+        if (!placed.some(b => box[0] < b[2] && box[2] > b[0] && box[1] < b[3] && box[3] > b[1])) { placed.push(box); ok = true; }
+        else y -= th * 0.6;
+      }
+      if (!ok) continue;
       ctx.globalAlpha = k.alpha * Math.min(1, 0.5 + p);
       ctx.drawImage(k.tag.canvas, x, y, tw, th);
     }
