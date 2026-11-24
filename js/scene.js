@@ -493,7 +493,7 @@
         <rect x="27" y="57" width="246" height="96" rx="7" fill="url(#wood)"/>
         <text x="150" y="99" text-anchor="middle" textLength="226" lengthAdjust="spacingAndGlyphs" font-family="Charm, Mitr" font-weight="700" font-size="33" fill="#ffe39b" style="filter:drop-shadow(0 0 6px rgba(255,200,90,.6))">${escapeXml(cfg.HOSPITAL_NAME || 'โรงพยาบาลปากชม')}</text>
         <text x="150" y="122" text-anchor="middle" textLength="222" lengthAdjust="spacingAndGlyphs" font-family="Mitr" font-size="12" fill="#f3d9a6">PAK CHOM HOSPITAL • ${escapeXml(cfg.HOSPITAL_SUB || 'จ.เลย')}</text>
-        <text x="150" y="143" text-anchor="middle" textLength="216" lengthAdjust="spacingAndGlyphs" font-family="Mitr" font-size="12" fill="#ffd27a">🪷 ลอยกระทงออนไลน์ ร่วมบุญริมโขง 🪷</text>
+        <text x="150" y="143" text-anchor="middle" textLength="216" lengthAdjust="spacingAndGlyphs" font-family="Mitr" font-size="12" fill="#ffd27a">🌸 ลอยกระทงออนไลน์ ร่วมบุญริมโขง 🌸</text>
         <!-- little hanging lanterns -->
         <g class="swing"><line x1="40" y1="160" x2="40" y2="178" stroke="#3c1f0c"/><rect x="31" y="178" width="18" height="24" rx="6" fill="#ff8a2a"/><rect x="34" y="202" width="12" height="10" fill="#ffd27a"/></g>
         <g class="swing2"><line x1="260" y1="160" x2="260" y2="178" stroke="#3c1f0c"/><rect x="251" y="178" width="18" height="24" rx="6" fill="#ff8a2a"/><rect x="254" y="202" width="12" height="10" fill="#ffd27a"/></g>

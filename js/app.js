@@ -18,7 +18,7 @@
   /* ------------------------------------------------------------------ */
   const tierOf = (amt) => (amt >= C.TIER_LARGE ? 'L' : amt >= C.TIER_MEDIUM ? 'M' : 'S');
   const TIER_TH = { S: 'กระทงเล็ก', M: 'กระทงกลาง', L: 'กระทงใหญ่' };
-  const TIER_ICO = { S: '🪷', M: '🪷🪷', L: '🌟🪷' };
+  const TIER_ICO = { S: '🌸', M: '🌸🌸', L: '🌟🌸' };
   const esc = (s) => String(s ?? '').replace(/[<>&"']/g, (c) => ({ '<': '&lt;', '>': '&gt;', '&': '&amp;', '"': '&quot;', "'": '&#39;' }[c]));
   function ago(ts) {
     const s = (Date.now() - ts) / 1000;
@@ -98,7 +98,7 @@
     const latest = arr[0];
     $('latest').innerHTML = latest ? `<div class="card"><i class="ava" style="background-image:url('${ava(latest.gender)}');width:38px;height:38px"></i>
       <div style="flex:1;min-width:0"><small style="color:#ffd9a0">ล่าสุด · ${ago(latest.ts)}</small><b style="display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(latest.name)}</b></div>
-      <b style="color:#ffe39b">${fmt(latest.amount)} ฿</b></div>` : '<p style="text-align:center;opacity:.7">ร่วมเป็นคนแรกที่ลอยกระทง 🪷</p>';
+      <b style="color:#ffe39b">${fmt(latest.amount)} ฿</b></div>` : '<p style="text-align:center;opacity:.7">ร่วมเป็นคนแรกที่ลอยกระทง 🌸</p>';
     const rest = arr.slice(1, 120);
     const html = rest.map(donorItem).join('');
     $('donorList').innerHTML = html + (rest.length > 6 ? html : '');   // ซ้ำเพื่อเลื่อนวนต่อเนื่อง
@@ -221,29 +221,72 @@
     else { const t = tierOf(v); b.className = 'tier ' + t; b.textContent = TIER_TH[t]; }
     $('tierHint').textContent = `เล็ก < ${fmt(C.TIER_MEDIUM)} · กลาง ${fmt(C.TIER_MEDIUM)}+ · ใหญ่ ${fmt(C.TIER_LARGE)}+ บาท (ขั้นต่ำ ${fmt(C.MIN_AMOUNT)} บาท)`;
   }
-  let payTimer;
+  let payTimer, payQr = null;
+  function payPayload(amt) {
+    if (C.THAIQR_PAYLOAD) return PromptPay.withAmount(C.THAIQR_PAYLOAD, amt);
+    if (C.PROMPTPAY_ID) return PromptPay.payload(C.PROMPTPAY_ID, amt);
+    return '';
+  }
   function renderPay() {
     clearTimeout(payTimer);
     payTimer = setTimeout(() => {
       const box = $('payBox');
       const amt = Number($('fAmount').value) || 0;
-      let qrHtml = '';
-      if (C.PROMPTPAY_ID && window.qrcode) {
-        const qr = qrcode(0, 'M'); qr.addData(PromptPay.payload(C.PROMPTPAY_ID, amt >= 1 ? amt : 0)); qr.make();
-        qrHtml = `<div class="qr">${qr.createSvgTag({ cellSize: 3, margin: 2, scalable: true })}</div>`;
+      const payload = window.qrcode ? payPayload(amt >= 1 ? amt : 0) : '';
+      let html = '';
+      if (payload) {
+        payQr = qrcode(0, 'M'); payQr.addData(payload); payQr.make();
+        const eDon = !!C.THAIQR_PAYLOAD;
+        html += `<div class="pay-head"><span class="pp">PromptPay</span>${eDon ? '<span class="edon">e-Donation · ลดหย่อนภาษีได้</span>' : ''}</div>
+          <div class="pay-qr-wrap"><div class="qr">${payQr.createSvgTag({ cellSize: 4, margin: 2, scalable: true })}</div></div>
+          <div class="pay-amt">${amt >= 1 ? `สแกนจ่าย <b>${fmt(amt)} บาท</b> ยอดขึ้นอัตโนมัติ` : '<span class="warn">เลือกจำนวนเงินก่อน แล้ว QR จะใส่ยอดให้อัตโนมัติ</span>'}</div>
+          <div class="pay-to">ผู้รับ: ${esc(C.PAY_NAME || C.HOSPITAL_NAME)}</div>
+          <div class="pay-btns"><button type="button" class="pay-btn" id="saveQr">💾 บันทึก QR ลงเครื่อง</button></div>
+          <ol class="pay-steps"><li>กด <b>บันทึก QR</b> (หรือสแกนจากจออื่น)</li><li>เปิดแอปธนาคาร › สแกน › เลือกรูป QR จากอัลบั้ม</li><li>โอนเสร็จ แคปสลิป แล้วแนบด้านล่าง</li></ol>`;
       }
-      const acc = C.ACCOUNT_NO
-        ? `<div>${esc(C.BANK_NAME)}</div><div class="acc">${esc(C.ACCOUNT_NO)}</div><div>${esc(C.ACCOUNT_NAME)}</div>
-           <button type="button" class="copy" data-copy="${esc(String(C.ACCOUNT_NO).replace(/[^0-9]/g, ''))}">คัดลอกเลขบัญชี</button>`
-        : (C.PROMPTPAY_ID ? '' : '<div style="opacity:.8">⚠️ ยังไม่ได้ตั้งค่าบัญชีรับบริจาค<br><small>(แก้ที่ชีต Settings)</small></div>');
-      box.innerHTML = `${qrHtml}<div><b>โอนเงินร่วมบุญ</b>${C.PROMPTPAY_ID ? `<div>พร้อมเพย์ ${amt ? `<b>${fmt(amt)} บาท</b>` : ''}</div>` : ''}${acc}
-        ${C.CONTACT ? `<div style="margin-top:4px;opacity:.75">ติดต่อ ${esc(C.CONTACT)}</div>` : ''}</div>`;
+      if (C.ACCOUNT_NO) {
+        html += `<div class="pay-acc"><div>หรือโอนเข้าบัญชี ${esc(C.BANK_NAME)}</div><div class="acc">${esc(C.ACCOUNT_NO)}</div><div>${esc(C.ACCOUNT_NAME)}</div>
+          <button type="button" class="copy" data-copy="${esc(String(C.ACCOUNT_NO).replace(/[^0-9]/g, ''))}">คัดลอกเลขบัญชี</button></div>`;
+      }
+      if (!html) html = '<div style="opacity:.8">⚠️ ยังไม่ได้ตั้งค่าบัญชีรับบริจาค<br><small>(แก้ที่ชีต Settings)</small></div>';
+      if (C.CONTACT) html += `<div class="pay-contact">ติดต่อ ${esc(C.CONTACT)}</div>`;
+      box.innerHTML = html;
     }, 120);
   }
+  // บันทึก QR เป็นรูป PNG (สำหรับคนที่ใช้มือถือเครื่องเดียว สแกนจอตัวเองไม่ได้)
+  function saveQrImage() {
+    if (!payQr) return;
+    const amt = Number($('fAmount').value) || 0;
+    const n = payQr.getModuleCount(), cell = 12, qrSize = n * cell, W = qrSize + 120, H = qrSize + 330;
+    const cv = document.createElement('canvas'); cv.width = W; cv.height = H;
+    const g = cv.getContext('2d');
+    g.fillStyle = '#fff'; g.fillRect(0, 0, W, H);
+    g.fillStyle = '#123a64'; g.fillRect(0, 0, W, 96);
+    g.fillStyle = '#fff'; g.textAlign = 'center'; g.font = '600 34px Mitr, sans-serif';
+    g.fillText(C.THAIQR_PAYLOAD ? 'PromptPay e-Donation' : 'PromptPay', W / 2, 60);
+    g.fillStyle = '#000';
+    for (let r = 0; r < n; r++) for (let c = 0; c < n; c++) if (payQr.isDark(r, c)) g.fillRect(60 + c * cell, 130 + r * cell, cell, cell);
+    g.fillStyle = '#123a64'; g.font = '500 34px Mitr, sans-serif';
+    g.fillText(C.PAY_NAME || C.HOSPITAL_NAME || '', W / 2, 130 + qrSize + 60);
+    g.fillStyle = '#c0392b'; g.font = '600 44px Mitr, sans-serif';
+    g.fillText(amt >= 1 ? `${fmt(amt)} บาท` : 'ระบุยอดเองในแอป', W / 2, 130 + qrSize + 120);
+    g.fillStyle = '#666'; g.font = '300 22px Mitr, sans-serif';
+    g.fillText('ลอยกระทงออนไลน์ ริมโขง · แนบสลิปที่หน้าเว็บหลังโอน', W / 2, 130 + qrSize + 165);
+    cv.toBlob((blob) => {
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = `QR-ร่วมบุญ-${amt || 'ระบุยอด'}บาท.png`;
+      document.body.appendChild(a); a.click(); a.remove();
+      setTimeout(() => URL.revokeObjectURL(a.href), 4000);
+      const b = $('saveQr'); if (b) b.textContent = '✓ บันทึกแล้ว — เปิดแอปธนาคารได้เลย';
+    }, 'image/png');
+  }
   $('payBox').addEventListener('click', (e) => {
+    if (e.target.closest('#saveQr')) return saveQrImage();
     const b = e.target.closest('[data-copy]'); if (!b) return;
     navigator.clipboard && navigator.clipboard.writeText(b.dataset.copy).then(() => { b.textContent = 'คัดลอกแล้ว ✓'; });
   });
+
 
   // slip: compress image client-side
   $('fSlip').addEventListener('change', async (e) => {
@@ -302,7 +345,7 @@
       slip: { mimeType: state.slip.mimeType, data: state.slip.data, name: state.slip.name },
     };
     const btn = $('submitBtn');
-    btn.disabled = true; btn.textContent = 'กำลังส่งข้อมูล… 🪷';
+    btn.disabled = true; btn.textContent = 'กำลังส่งข้อมูล… 🌸';
     try {
       let res;
       if (DEMO) {
@@ -322,7 +365,7 @@
 
   function showThanks(d) {
     $('donateForm').hidden = true; $('thanks').hidden = false;
-    $('thanksText').innerHTML = `ขอบคุณ <b>${esc(d.name)}</b><br>ที่ร่วมบุญ ${fmt(d.amount)} บาท (${TIER_TH[d.size]})<br>ตัวการ์ตูนของคุณกำลังเดินไปลอยกระทงที่แม่น้ำโขง 🪷`;
+    $('thanksText').innerHTML = `ขอบคุณ <b>${esc(d.name)}</b><br>ที่ร่วมบุญ ${fmt(d.amount)} บาท (${TIER_TH[d.size]})<br>ตัวการ์ตูนของคุณกำลังเดินไปลอยกระทงที่แม่น้ำโขง 🌸`;
     $('donateForm').reset(); state.slip = null; state.gender = '';
     [...$('genderSeg').children].forEach((x) => x.classList.remove('on'));
     $('slipDrop').classList.remove('has'); $('slipText').textContent = '📎 แตะเพื่อเลือกรูปสลิป (JPG/PNG/PDF)';

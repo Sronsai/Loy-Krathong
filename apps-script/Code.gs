@@ -209,7 +209,7 @@ function getSettings_() {
 function publicSettings_() {
   const s = getSettings_();
   const keys = ['EVENT_TITLE', 'HOSPITAL_NAME', 'BANK_NAME', 'ACCOUNT_NO', 'ACCOUNT_NAME', 'PROMPTPAY_ID',
-    'MIN_AMOUNT', 'TIER_MEDIUM', 'TIER_LARGE', 'GOAL_AMOUNT', 'CONTACT', 'DONATION_OPEN', 'FB_PAGE_NAME', 'EVENT_END'];
+    'MIN_AMOUNT', 'TIER_MEDIUM', 'TIER_LARGE', 'GOAL_AMOUNT', 'CONTACT', 'DONATION_OPEN', 'FB_PAGE_NAME', 'EVENT_END', 'THAIQR_PAYLOAD'];
   const out = {};
   keys.forEach(function (k) { if (s[k] !== undefined && s[k] !== '') out[k] = s[k]; });
   // EVENT_END: รองรับทั้ง "23:00" (เวลาวันนี้) และวันที่+เวลาเต็ม

@@ -26,5 +26,26 @@
     data += '6304';
     return data + crc16(data);
   }
-  window.PromptPay = { payload };
+  // แปลง QR แบบคงที่ (เช่น QR e-Donation ของ รพ.) ให้มียอดเงินฝังอยู่ (dynamic QR)
+  function parse(str) {
+    const out = []; let i = 0;
+    while (i + 4 <= str.length) {
+      const id = str.substr(i, 2), len = parseInt(str.substr(i + 2, 2), 10);
+      if (isNaN(len)) break;
+      out.push([id, str.substr(i + 4, len)]); i += 4 + len;
+    }
+    return out;
+  }
+  function withAmount(staticPayload, amount) {
+    const tags = parse(String(staticPayload || '').trim()).filter(([id]) => id !== '63' && id !== '54');
+    if (!tags.length) return '';
+    const amt = Number(amount) > 0 ? Number(amount).toFixed(2) : '';
+    const t01 = tags.find(([id]) => id === '01');
+    if (t01) t01[1] = amt ? '12' : '11';
+    if (amt) tags.push(['54', amt]);
+    tags.sort((a, b) => a[0].localeCompare(b[0]));
+    let data = tags.map(([id, v]) => f(id, v)).join('') + '6304';
+    return data + crc16(data);
+  }
+  window.PromptPay = { payload, withAmount, crc16 };
 })();
