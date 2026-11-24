@@ -556,6 +556,7 @@
 
   window.Scene = {
     W, H, start, fit, persp, inWater, addKrathong, ripple, sparkle, firework, chime, setSound,
+    spriteURL: (t) => { if (!sprites[t + '0']) buildSprites(); return sprites[t + '0'].canvas.toDataURL(); },
     RELEASE_POINT, TABLE, onFrame: (fn) => hooks.push(fn),
     get scale() { return scale; }, get count() { return krathongs.length; },
   };

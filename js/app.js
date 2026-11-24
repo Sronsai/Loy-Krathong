@@ -156,7 +156,7 @@
     const num = ['MIN_AMOUNT', 'TIER_MEDIUM', 'TIER_LARGE', 'GOAL_AMOUNT'];
     Object.keys(cfg || {}).forEach((k) => { C[k] = num.includes(k) ? Number(cfg[k]) : cfg[k]; });
     $('eventTitle').textContent = C.EVENT_TITLE;
-    renderPay(); renderTier(); renderStats();
+    buildTierCards(); renderPay(); renderTier(); renderStats();
     if (C.DONATION_OPEN === false || C.DONATION_OPEN === 'FALSE') {
       $('submitBtn').disabled = true; $('submitBtn').textContent = 'ปิดรับบริจาคแล้ว ขอบคุณค่ะ';
     }
@@ -214,12 +214,30 @@
     [...$('amountChips').children].forEach((x) => x.classList.toggle('on', Number(x.dataset.a) === v));
     renderTier(); renderPay();
   }
+  const TIER_RANGE = () => ({ S: [C.MIN_AMOUNT, C.TIER_MEDIUM - 1], M: [C.TIER_MEDIUM, C.TIER_LARGE - 1], L: [C.TIER_LARGE, null] });
+  function buildTierCards() {
+    const r = TIER_RANGE();
+    $('tierCards').innerHTML = ['S', 'M', 'L'].map((t) => `
+      <button type="button" class="tcard t${t}" data-t="${t}">
+        <img src="${Scene.spriteURL(t)}" alt="">
+        <b>${TIER_TH[t].replace('กระทง', '')}</b>
+        <small>${fmt(r[t][0])}${r[t][1] ? '–' + fmt(r[t][1]) : '+'} ฿</small>
+        ${t === 'L' ? '<em>+ พลุ 🎆</em>' : t === 'M' ? '<em>+ พลุ</em>' : ''}
+      </button>`).join('');
+  }
+  $('tierCards').addEventListener('click', (e) => {
+    const b = e.target.closest('.tcard'); if (!b) return;
+    const t = b.dataset.t, r = TIER_RANGE()[t], cur = Number($('fAmount').value);
+    if (tierOf(cur) !== t || !cur) $('fAmount').value = r[0];
+    onAmount();
+  });
   function renderTier() {
     const v = Number($('fAmount').value);
-    const b = $('tierBadge');
-    if (!v) { b.className = 'tier'; b.textContent = 'ขนาดกระทง'; }
-    else { const t = tierOf(v); b.className = 'tier ' + t; b.textContent = TIER_TH[t]; }
-    $('tierHint').textContent = `เล็ก < ${fmt(C.TIER_MEDIUM)} · กลาง ${fmt(C.TIER_MEDIUM)}+ · ใหญ่ ${fmt(C.TIER_LARGE)}+ บาท (ขั้นต่ำ ${fmt(C.MIN_AMOUNT)} บาท)`;
+    const t = v ? tierOf(v) : '';
+    document.querySelectorAll('.tcard').forEach((c) => c.classList.toggle('on', c.dataset.t === t));
+    $('tierHint').textContent = v && v < C.MIN_AMOUNT ? `ขั้นต่ำ ${fmt(C.MIN_AMOUNT)} บาท` : (t ? `ได้${TIER_TH[t]} ${fmt(v)} บาท` : 'แตะขนาดกระทง หรือเลือกจำนวนเงิน');
+    const btn = $('submitBtn');
+    if (!btn.disabled) btn.textContent = t && v >= C.MIN_AMOUNT ? `ลอย${TIER_TH[t]} ${fmt(v)} บาท 🙏` : 'ลอยกระทง 🙏';
   }
   let payTimer, payQr = null;
   function payPayload(amt) {
@@ -242,7 +260,7 @@
           <div class="pay-amt">${amt >= 1 ? `สแกนจ่าย <b>${fmt(amt)} บาท</b> ยอดขึ้นอัตโนมัติ` : '<span class="warn">เลือกจำนวนเงินก่อน แล้ว QR จะใส่ยอดให้อัตโนมัติ</span>'}</div>
           <div class="pay-to">ผู้รับ: ${esc(C.PAY_NAME || C.HOSPITAL_NAME)}</div>
           <div class="pay-btns"><button type="button" class="pay-btn" id="saveQr">💾 บันทึก QR ลงเครื่อง</button></div>
-          <ol class="pay-steps"><li>กด <b>บันทึก QR</b> (หรือสแกนจากจออื่น)</li><li>เปิดแอปธนาคาร › สแกน › เลือกรูป QR จากอัลบั้ม</li><li>โอนเสร็จ แคปสลิป แล้วแนบด้านล่าง</li></ol>`;
+          <p class="pay-tip">ใช้มือถือเครื่องเดียว? กดบันทึก QR › เปิดแอปธนาคาร › สแกน › <b>เลือกรูปจากอัลบั้ม</b></p>`;
       }
       if (C.ACCOUNT_NO) {
         html += `<div class="pay-acc"><div>หรือโอนเข้าบัญชี ${esc(C.BANK_NAME)}</div><div class="acc">${esc(C.ACCOUNT_NO)}</div><div>${esc(C.ACCOUNT_NAME)}</div>
@@ -359,7 +377,7 @@
     } catch (ex) {
       err('❌ ' + (ex.message || 'เกิดข้อผิดพลาด กรุณาลองใหม่'));
     } finally {
-      btn.disabled = false; btn.textContent = 'ลอยกระทง 🙏';
+      btn.disabled = false; renderTier();
     }
   });
 
@@ -377,7 +395,12 @@
     const c = $('formPanel').classList.toggle('collapsed');
     $('formToggle').textContent = c ? '+' : '–';
   });
-  $('btnDonateMobile').addEventListener('click', () => $('formPanel').scrollIntoView({ behavior: 'smooth' }));
+  $('btnDonateMobile').addEventListener('click', () => $('formPanel').scrollIntoView({ behavior: 'smooth', block: 'start' }));
+  // ปุ่มลอย "ร่วมบุญ" บนมือถือ: ซ่อนเมื่อฟอร์มอยู่บนจอ เพื่อไม่ให้ทับปุ่มส่ง
+  if ('IntersectionObserver' in window) {
+    new IntersectionObserver((es) => es.forEach((en) => document.body.classList.toggle('form-in-view', en.isIntersecting)),
+      { threshold: 0.05 }).observe($('formPanel'));
+  }
 
   /* ------------------------------------------------------------------ */
   /*  Controls & modes                                                   */
@@ -453,6 +476,7 @@
   /* ------------------------------------------------------------------ */
   $('eventTitle').textContent = C.EVENT_TITLE;
   Scene.start(C);
+  buildTierCards();
   renderTier(); renderPay(); renderStats();
   if (DEMO) startDemo(); else loadInitial();
   setTimeout(Scene.fit, 300);

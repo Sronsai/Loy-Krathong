@@ -54,39 +54,45 @@
       <button class="icon-btn" id="formToggle" aria-label="ย่อ/ขยายฟอร์ม">–</button>
     </div>
     <form id="donateForm" novalidate autocomplete="on">
-      <label class="field">
-        <span>ชื่อ-สกุล <em>*</em></span>
-        <input name="name" id="fName" maxlength="80" placeholder="เช่น สมชาย ใจบุญ" required autocomplete="name">
-      </label>
-
-      <div class="field">
-        <span>เพศ <em>*</em> <small>(ตัวการ์ตูนที่จะเดินไปลอยกระทง)</small></span>
-        <div class="seg" id="genderSeg">
-          <button type="button" data-v="male"><i class="ava ava-m"></i>ชาย</button>
-          <button type="button" data-v="female"><i class="ava ava-f"></i>หญิง</button>
+      <section class="step">
+        <h3><i>1</i>ผู้ร่วมบุญ</h3>
+        <label class="field">
+          <span>ชื่อ-สกุล <em>*</em></span>
+          <input name="name" id="fName" maxlength="80" placeholder="เช่น สมชาย ใจบุญ" required autocomplete="name">
+        </label>
+        <div class="field">
+          <span>ตัวการ์ตูนที่จะเดินไปลอยกระทง <em>*</em></span>
+          <div class="seg" id="genderSeg">
+            <button type="button" data-v="male"><i class="ava ava-m"></i><span>ชาย</span></button>
+            <button type="button" data-v="female"><i class="ava ava-f"></i><span>หญิง</span></button>
+          </div>
         </div>
-      </div>
+      </section>
 
-      <div class="field">
-        <span>จำนวนเงินซื้อกระทง (บาท) <em>*</em></span>
+      <section class="step">
+        <h3><i>2</i>เลือกกระทง</h3>
+        <div class="tiers" id="tierCards"></div>
         <div class="chips" id="amountChips"></div>
-        <div class="amount-row">
-          <input name="amount" id="fAmount" type="number" inputmode="decimal" min="1" step="1" placeholder="ระบุจำนวนเงิน">
-          <span class="tier" id="tierBadge">ขนาดกระทง</span>
-        </div>
+        <label class="amount-row">
+          <input name="amount" id="fAmount" type="number" inputmode="numeric" min="1" step="1" placeholder="หรือระบุจำนวนเงิน">
+          <span class="unit">บาท</span>
+        </label>
         <small class="hint" id="tierHint"></small>
-      </div>
+      </section>
 
-      <div class="pay" id="payBox"></div>
+      <section class="step">
+        <h3><i>3</i>สแกนโอนเงิน</h3>
+        <div class="pay" id="payBox"></div>
+      </section>
 
-      <div class="field">
-        <span>แนบสลิปโอนเงิน <em>*</em></span>
+      <section class="step">
+        <h3><i>4</i>แนบสลิปโอนเงิน</h3>
         <label class="drop" id="slipDrop">
           <input type="file" id="fSlip" accept="image/*,application/pdf">
-          <span class="drop-text" id="slipText">📎 แตะเพื่อเลือกรูปสลิป (JPG/PNG/PDF)</span>
+          <span class="drop-text" id="slipText"><b>📎 แตะเพื่อเลือกรูปสลิป</b><small>JPG · PNG · PDF</small></span>
           <img id="slipPreview" alt="">
         </label>
-      </div>
+      </section>
 
       <details class="more">
         <summary>ข้อมูลเพิ่มเติม (ไม่บังคับ)</summary>
@@ -104,6 +110,7 @@
 
       <div class="err" id="formErr" role="alert"></div>
       <button type="submit" class="btn-main" id="submitBtn">ลอยกระทง 🙏</button>
+      <p class="fine">ข้อมูลเบอร์โทรและสลิปเห็นเฉพาะเจ้าหน้าที่ รพ.</p>
     </form>
     <div class="thanks" id="thanks" hidden>
       <div class="big">🙏</div>
@@ -145,8 +152,8 @@
   <nav id="controls">
     <button class="icon-btn" id="btnSound" title="เปิด/ปิดเสียง">🔇</button>
     <button class="icon-btn" id="btnFull" title="เต็มจอ">⛶</button>
-    <button class="mobile-cta" id="btnDonateMobile">🌸 ร่วมบุญลอยกระทง</button>
   </nav>
+  <button class="mobile-cta" id="btnDonateMobile">🌸 ร่วมบุญลอยกระทง</button>
 </div>
 
 <script src="lib/qrcode.js"></script>

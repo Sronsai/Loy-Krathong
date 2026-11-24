@@ -247,3 +247,70 @@ body.tv #donorPanel { height: calc(100vh - 32px - clamp(220px, 15vw, 300px) - 90
 /* TV: แถบ LIVE อยู่ใต้หัวเรื่อง ไม่ทับกัน */
 body.tv #liveBar { left: 50%; transform: translateX(-50%); top: 112px; }
 body.tv #demoBanner { top: 168px; }
+
+/* =====================================================================
+   ฟอร์มแบบ 4 ขั้นตอน (ปรับใหม่)
+   ===================================================================== */
+#donateForm { gap: 12px; }
+.step { background: rgba(255, 255, 255, .045); border: 1px solid rgba(255, 255, 255, .08); border-radius: 16px; padding: 12px; display: flex; flex-direction: column; gap: 10px; }
+.step h3 { margin: 0; display: flex; align-items: center; gap: 8px; font-size: 1em; font-weight: 500; color: var(--gold-2); }
+.step h3 i { font-style: normal; width: 24px; height: 24px; border-radius: 50%; display: grid; place-items: center; font-size: .8em; font-weight: 600;
+  background: linear-gradient(180deg, #ffe39b, #f6aa3a); color: #3a1d00; flex: none; }
+.seg button { flex-direction: column; gap: 4px; padding: 10px 6px; }
+.seg .ava { width: 44px; height: 44px; }
+.seg button.on .ava { box-shadow: 0 0 0 2px var(--gold); }
+
+.tiers { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+.tcard { position: relative; display: flex; flex-direction: column; align-items: center; gap: 1px; padding: 8px 4px 9px; border-radius: 14px;
+  border: 1px solid rgba(255, 255, 255, .16); background: rgba(255, 255, 255, .05); cursor: pointer; transition: .2s; }
+.tcard img { width: 64px; height: 52px; object-fit: cover; object-position: 50% 62%; filter: drop-shadow(0 0 8px rgba(255, 170, 60, .55)); }
+.tcard.tS img { transform: scale(.8); }
+.tcard.tL img { transform: scale(1.12); }
+.tcard b { font-weight: 500; font-size: 1em; }
+.tcard small { color: var(--muted); font-size: .76em; white-space: nowrap; }
+.tcard em { position: absolute; top: -8px; right: -4px; font-style: normal; font-size: .66em; padding: 1px 6px; border-radius: 99px; background: #e0245e; color: #fff; }
+.tcard.on { border-color: var(--gold); background: rgba(245, 193, 88, .18); box-shadow: 0 0 16px rgba(245, 193, 88, .35); transform: translateY(-2px); }
+.chips { justify-content: center; }
+.amount-row { position: relative; }
+.amount-row input { padding-right: 52px; font-size: 1.1em; text-align: center; font-weight: 400; }
+.amount-row .unit { position: absolute; right: 14px; top: 50%; transform: translateY(-50%); color: var(--muted); pointer-events: none; }
+.hint { text-align: center; color: var(--gold-2); opacity: .9; }
+
+.pay { border: 0; background: rgba(255, 255, 255, .96); color: #1c2a44; padding: 12px; }
+.pay-head .edon { background: #e8eef7; }
+.pay-qr-wrap .qr { width: 190px; height: 190px; padding: 0; }
+.pay-amt b { color: #c0392b; }
+.pay-amt .warn { color: #b26a00; }
+.pay-to { color: #5a6680; }
+.pay-btn { background: #123a64; color: #fff; border: 0; padding: 11px 12px; }
+.pay-tip { margin: 0; font-size: .82em; color: #5a6680; }
+.pay-acc { border-top-color: #d5dbe6; }
+.pay .copy { border-color: #123a64; color: #123a64; }
+
+.drop { min-height: 76px; flex-direction: column; }
+.drop-text { display: flex; flex-direction: column; gap: 2px; }
+.drop-text b { font-weight: 400; }
+.drop-text small { color: var(--muted); font-size: .8em; }
+.drop.has { border-style: solid; border-color: var(--ok); }
+.btn-main { padding: 14px; font-size: 1.15em; }
+.fine { margin: -4px 0 0; text-align: center; font-size: .72em; color: var(--muted); }
+
+/* ---------------- มือถือ ---------------- */
+.mobile-cta { display: none; }
+@media (max-aspect-ratio: 1/1), (max-width: 760px) {
+  #controls { display: none; }                         /* ปุ่มเสียง/เต็มจอไม่จำเป็นบนมือถือ */
+  #formPanel { order: 2; margin: 10px; max-height: none; overflow: visible; }
+  #donorPanel { right: auto; top: auto; }
+  #donorPanel { order: 3; }
+  .panel-head h2 { font-size: 1.2em; }
+  form { padding: 4px 10px 14px; }
+  input, input[type=number], input[type=tel], input:not([type]) { font-size: 16px; } /* กัน iOS ซูมเอง */
+  .tcard img { width: 72px; height: 58px; }
+  .mobile-cta { display: block; position: fixed; left: 12px; right: 12px; bottom: calc(12px + env(safe-area-inset-bottom)); z-index: 40;
+    border: 0; border-radius: 99px; padding: 13px; font-size: 1.05em; font-weight: 500; color: #3a1d00;
+    background: linear-gradient(180deg, #ffe39b, #f6aa3a); box-shadow: 0 8px 26px rgba(0, 0, 0, .55); cursor: pointer;
+    transition: transform .25s, opacity .25s; }
+  body.form-in-view .mobile-cta { transform: translateY(140%); opacity: 0; pointer-events: none; }
+  #app::after { height: 84px; }
+}
+.pay-tip b { color: #123a64; }
