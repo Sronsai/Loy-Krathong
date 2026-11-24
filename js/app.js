@@ -456,7 +456,7 @@
     const u = new URL(C.DONATE_URL || location.href); u.searchParams.delete('tv');
     const qr = qrcode(0, 'M'); qr.addData(u.toString()); qr.make();
     $('tvQrCode').innerHTML = qr.createSvgTag({ cellSize: 4, margin: 1, scalable: true });
-    $('tvQrUrl').textContent = u.host + u.pathname;
+    $('tvQrUrl').textContent = u.host + u.pathname.replace(/index\.html$/, '');
     // OBS Browser Source เล่นเสียงได้เองโดยไม่ต้องคลิก → ใช้ ?sound=1
     if (qs.has('sound')) { sound = true; Scene.setSound(true); }
     else document.addEventListener('click', () => { if (!sound) { sound = true; Scene.setSound(true); } }, { once: true });
