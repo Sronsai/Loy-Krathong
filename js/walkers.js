@@ -10,6 +10,8 @@
   const PATH_TO_TABLE = [[2338, 694], [2300, 742], [2232, 812]];
   const PATH_TO_RAFT = [[2232, 812], [2120, 838], [2058, 866], [2020, 920], [1994, 990], [1950, 1035], [1820, 1080],
     [1660, 1136], [1500, 1196], [1350, 1250], [1200, 1300], [1086, 1340], [1010, 1318], [905, 1258], [810, 1196], [742, 1158]];
+  // ขากลับ: เดินย้อนขึ้นบันได → ทางเดิน → ผ่านหลังป้าย รพ. → ออกนอกเฟรมทางขวา
+  const PATH_LEAVE = PATH_TO_RAFT.slice(2).reverse().concat([[2150, 880], [2330, 915], [2480, 965], [2640, 1020], [2760, 1060]]);
   const STAIRS = { x0: 1960, x1: 1080 };              // ช่วงบันได (เดินกระเด้งเป็นขั้น)
 
   const heightAt = (y) => Math.max(66, Math.min(245, 68 + (y - 680) * 0.31));
@@ -162,17 +164,18 @@
       const h = heightAt(w.y);
       const speed = h * 0.62;                      // px/s ตามระยะ
       if (w.el.style.opacity !== '1' && w.state === 'toTable') w.el.style.opacity = Math.min(1, w.t * 2);
-      if (w.state === 'toTable' || w.state === 'toRaft') {
-        const onStairs = w.state === 'toRaft' && w.x < STAIRS.x0 && w.x > STAIRS.x1;
+      if (w.state === 'toTable' || w.state === 'toRaft' || w.state === 'leave') {
+        const onStairs = w.state !== 'toTable' && w.x < STAIRS.x0 && w.x > STAIRS.x1;
         w.dist += speed * dt * (onStairs ? 0.85 : 1);
         w.phase += dt * (onStairs ? 9 : 10);
-        const path = w.state === 'toTable' ? PATH_TO_TABLE : PATH_TO_RAFT;
+        const path = w.state === 'toTable' ? PATH_TO_TABLE : w.state === 'toRaft' ? PATH_TO_RAFT : PATH_LEAVE;
         const p = pointAt(path, w.dist);
         w.x = p.x; w.y = p.y;
         if (Math.abs(p.dx) > 2) w.face = p.dx < 0 ? -1 : 1;
         const bounce = onStairs ? Math.abs(Math.sin(w.phase)) * 5 : 0;
         pose(w, 1, bounce);
         if (p.end) {
+          if (w.state === 'leave') { w.el.remove(); walkers.splice(i, 1); continue; }  // ออกนอกเฟรมแล้ว
           w.stateT = 0; w.dist = 0;
           if (w.state === 'toTable') { w.state = 'pick'; w.face = 1; }
           else { w.state = 'release'; w.face = -1; }
@@ -202,8 +205,13 @@
         const k = Math.max(0, 1 - w.stateT / 0.4);
         w.parts.body.setAttribute('transform', `translate(0 ${k * 16 + Math.sin(Math.min(1, w.stateT / 1.2) * Math.PI) * 6})`);
         w.face = 1; place(w);
-        if (w.stateT > 2.2 && !w.el.classList.contains('fade')) { w.el.classList.add('fade'); Scene.sparkle(w.x, w.y - heightAt(w.y) * 0.5, 22, 70); }
-        if (w.stateT > 3.6) { w.el.remove(); walkers.splice(i, 1); }
+        if (w.stateT > 2.2) {
+          // ไหว้เสร็จ → เดินกลับขึ้นบันได แล้วออกนอกเฟรม
+          w.parts.wai.style.display = 'none';
+          w.parts.armL.style.display = ''; w.parts.armR.style.display = '';
+          w.parts.body.removeAttribute('transform');
+          w.state = 'leave'; w.stateT = 0; w.dist = 0;
+        }
       }
     }
   }
@@ -221,7 +229,8 @@
       // คิวยาวเกิน: ปล่อยกระทงตรงลงน้ำเลย เพื่อไม่ให้ค้าง
       while (queue.length > 8) { const j = queue.shift(); j.onRelease && j.onRelease(j.d); }
     }
-    if (queue.length && walkers.length < max && t - lastSpawn > 3.2) {
+    const busy = walkers.filter((w) => w.state !== 'leave').length;   // คนที่กำลังเดินกลับไม่นับ
+    if (queue.length && busy < max && t - lastSpawn > 3.2) {
       const j = queue.shift(); spawn(j.d, j.onRelease); lastSpawn = t;
     }
     update(dt);
