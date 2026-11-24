@@ -284,26 +284,30 @@
     payTimer = setTimeout(() => {
       const box = $('payBox');
       const amt = Number($('fAmount').value) || 0;
-      const payload = window.qrcode ? payPayload(amt >= 1 ? amt : 0) : '';
       let html = '';
-      if (payload) {
-        payQr = qrcode(0, 'M'); payQr.addData(payload); payQr.make();
-        const eDon = !!C.THAIQR_PAYLOAD;
-        html += `<div class="pay-head"><span class="pp">PromptPay</span>${eDon ? '<span class="edon">e-Donation · ลดหย่อนภาษีได้</span>' : ''}</div>
-          <div class="pay-qr-wrap"><div class="qr">${payQr.createSvgTag({ cellSize: 4, margin: 2, scalable: true })}</div></div>
-          <div class="pay-amt">${amt >= 1 ? `สแกนจ่าย <b>${fmt(amt)} บาท</b> ยอดขึ้นอัตโนมัติ` : '<span class="warn">เลือกจำนวนเงินก่อน แล้ว QR จะใส่ยอดให้อัตโนมัติ</span>'}</div>
-          <div class="pay-to">ผู้รับ: ${esc(C.PAY_NAME || C.HOSPITAL_NAME)}</div>
-          <div class="pay-btns"><button type="button" class="pay-btn" id="saveQr">💾 บันทึก QR ลงเครื่อง</button></div>
-          <p class="pay-tip">ใช้มือถือเครื่องเดียว? กดบันทึก QR › เปิดแอปธนาคาร › สแกน › <b>เลือกรูปจากอัลบั้ม</b></p>`;
+      // 1) บัญชีธนาคาร — แสดงเด่นเป็นหลัก พร้อมปุ่มคัดลอก
+      if (C.ACCOUNT_NO) {
+        const digits = String(C.ACCOUNT_NO).replace(/[^0-9]/g, '');
+        html += `<div class="bank">
+            <div class="bank-name">🏦 ${esc(C.BANK_NAME || 'บัญชีธนาคาร')}</div>
+            <div class="bank-no">${esc(C.ACCOUNT_NO)}</div>
+            <div class="bank-acc">ชื่อบัญชี <b>${esc(C.ACCOUNT_NAME || C.HOSPITAL_NAME)}</b></div>
+            ${amt >= 1 ? `<div class="bank-amt">ยอดโอน <b>${fmt(amt)} บาท</b></div>` : ''}
+            <button type="button" class="bank-copy" data-copy="${esc(digits)}">📋 คัดลอกเลขบัญชี</button>
+          </div>`;
       }
       if (C.ACCOUNT_NO) {
-        html += `<div class="pay-acc"><div>หรือโอนเข้าบัญชี ${esc(C.BANK_NAME)}</div><div class="acc">${esc(C.ACCOUNT_NO)}</div><div>${esc(C.ACCOUNT_NAME)}</div>
-          <button type="button" class="copy" data-copy="${esc(String(C.ACCOUNT_NO).replace(/[^0-9]/g, ''))}">คัดลอกเลขบัญชี</button></div>`;
+        html += `<div class="bank-tip">${amt >= 1 ? 'กดคัดลอก › เปิดแอปธนาคาร › วางเลขบัญชี › โอน แล้วแคปสลิปไว้แนบในขั้นตอนที่ 4' : '<span class="warn">เลือกจำนวนเงินในขั้นตอนที่ 2 ก่อน</span>'}</div>`;
       }
       if (!html) html = '<div style="opacity:.8">⚠️ ยังไม่ได้ตั้งค่าบัญชีรับบริจาค<br><small>(แก้ที่ชีต Settings)</small></div>';
       if (C.CONTACT) html += `<div class="pay-contact">ติดต่อ ${esc(C.CONTACT)}</div>`;
       box.innerHTML = html;
     }, 120);
+  }
+  function fallbackCopy(text) {   // สำหรับเบราว์เซอร์ที่ไม่รองรับ clipboard API (เช่น LINE/Facebook in-app)
+    const ta = document.createElement('textarea'); ta.value = text; ta.setAttribute('readonly', '');
+    ta.style.cssText = 'position:fixed;opacity:0;top:0'; document.body.appendChild(ta); ta.select();
+    let ok = false; try { ok = document.execCommand('copy'); } catch (e) {} ta.remove(); return ok;
   }
   // บันทึก QR เป็นรูป PNG (สำหรับคนที่ใช้มือถือเครื่องเดียว สแกนจอตัวเองไม่ได้)
   function saveQrImage() {
@@ -336,7 +340,9 @@
   $('payBox').addEventListener('click', (e) => {
     if (e.target.closest('#saveQr')) return saveQrImage();
     const b = e.target.closest('[data-copy]'); if (!b) return;
-    navigator.clipboard && navigator.clipboard.writeText(b.dataset.copy).then(() => { b.textContent = 'คัดลอกแล้ว ✓'; });
+    const done = () => { b.textContent = '✓ คัดลอกเลขบัญชีแล้ว'; b.classList.add('ok'); setTimeout(() => { b.textContent = '📋 คัดลอกเลขบัญชี'; b.classList.remove('ok'); }, 2500); };
+    if (navigator.clipboard && window.isSecureContext) navigator.clipboard.writeText(b.dataset.copy).then(done, () => fallbackCopy(b.dataset.copy) && done());
+    else if (fallbackCopy(b.dataset.copy)) done();
   });
 
 
