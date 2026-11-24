@@ -333,3 +333,6 @@ body.tv #demoBanner { top: 300px; }
 
 /* TV: ย้าย QR ไปมุมบนซ้าย (ท้องฟ้าว่าง ไม่บังกระทงบนน้ำ และไม่โดนคอมเมนต์ Facebook บนมือถือบัง) */
 body.tv #tvQr { top: 16px; bottom: auto; left: 16px; }
+
+/* TV: ไม่แสดงลิงก์ตัวอักษรใต้ QR */
+#tvQrUrl { display: none; }
